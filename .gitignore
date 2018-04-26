@@ -1,0 +1,10 @@
+
+##> ide-config ##
+.idea/
+.vscode/
+##< ide-config ##
+
+##> composer ##
+/vendor/
+composer.lock
+##< composer ##

@@ -1,0 +1,14 @@
+{
+    "name": "weglot/weglot-drupal",
+    "description": "Translate your Drupal website easily",
+    "require": {
+        "weglot/weglot-php": "^0.2.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Thomas Deneulin",
+            "email": "thomas@weglot.com"
+        }
+    ]
+}
