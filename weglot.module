@@ -15,6 +15,11 @@ use Weglot\Parser\ConfigProvider\ServerConfigProvider;
 
 define('WEGLOT_VERSION', '1.0');
 
+/**
+ * Helper function
+ *
+ * @return array
+ */
 function get_code_original_destination_language(){
 
 	global $language;
@@ -40,8 +45,8 @@ function treatPage($dom)
 
 
     $apiKey = variable_get("weglot_api_key", 3);
-    $path = current_path();
     $path_alias = drupal_lookup_path('alias',$path);
+
 
     if(!$apiKey){
         return prepare_render_treat_page($dom);
@@ -50,6 +55,10 @@ function treatPage($dom)
     $widgetCode    =  widget_html();
     $codeLanguages = get_code_original_destination_language();
 
+    global $base_url;
+    $current_path = current_path();
+    $current_url  = sprintf("%s/%s/%s", $base_url,$codeLanguages['destination'], $current_path);
+
     if($codeLanguages["destination"] === $codeLanguages["original"]){
         return prepare_render_treat_page($dom, array(
             "widget" => $widgetCode
@@ -57,15 +66,18 @@ function treatPage($dom)
     }
 
 
-    global $base_url;
-    $current_path = current_path();
 
     $client = new Client($apiKey);
 
     $config = new ManualConfigProvider();
-    $config->setUrl(sprintf("%s/%s/%s", $base_url,$codeLanguages['destination'], $current_path));
+    $config->setUrl($current_url);
 
     $excludeBlocks  = array("#toolbar","#overlay", ".page-admin", "#comment-body-add-more-wrapper"); // Todo : Add options + Hook drupal
+
+    $optionsExcludeBlocks = variable_get("weglot_exclude_blocks", '');
+    $optionsExcludeBlocks = explode(",", $optionsExcludeBlocks);
+    $excludeBlocks = array_merge($excludeBlocks, $optionsExcludeBlocks);
+
     $parser = new Parser($client, $config, $excludeBlocks);
 
     $content =  $parser->translate($dom, $codeLanguages["original"], $codeLanguages["destination"]);
@@ -75,6 +87,13 @@ function treatPage($dom)
         ));
 }
 
+/**
+ * Render treat page
+ *
+ * @param string $dom
+ * @param array $params
+ * @return string
+ */
 function prepare_render_treat_page($dom, $params = array()){
     if(isset($params["widget"])){
         return str_replace('</body>', $params["widget"] . '</body>', $dom);
@@ -83,8 +102,13 @@ function prepare_render_treat_page($dom, $params = array()){
     return $dom;
 }
 
-
+/**
+ * Impletation of hook_preprocess_page
+ *
+ * @return void
+ */
 function weglot_preprocess_page(&$vars, $hook) {
+
     if (arg(0) !== "admin") { // Only front
         drupal_add_js(drupal_get_path('module', 'weglot') . '/weglot-front.js');
         drupal_add_css(drupal_get_path('module', 'weglot') . '/weglot-front.css');
@@ -156,7 +180,7 @@ function admin_weglot()
     $form['general'] = array(
         '#type' => 'fieldset',
         '#title' => t('General Configuration'),
-        '#collapsible' => true,
+        '#collapsible' => false,
         '#collapsed' => false,
     );
 
@@ -169,6 +193,27 @@ function admin_weglot()
         '#required' => true
     );
 
+    $form['exclusion'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Translation exclusion (optional)'),
+        '#description' => t('By default, every page is translated. You can exclude parts of a page or a full page here.'),
+        '#collapsible' => true,
+        '#collapsed' => false,
+    );
+
+    $form['exclusion']['weglot_exclude_url'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Exclude URL here',
+        '#description' => t('You can write regex.'),
+        '#default_value' => variable_get('weglot_exclude_url', '')
+    );
+
+    $form['exclusion']['weglot_exclude_blocks'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Exclude blocks',
+        '#description' => t('Enter CSS selectors, separated by commas.'),
+        '#default_value' => variable_get('weglot_exclude_blocks', '')
+    );
 
 
     return system_settings_form($form);
