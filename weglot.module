@@ -34,6 +34,60 @@ function get_code_original_destination_language(){
     );
 }
 
+function weglot_is_eligible_url($url){
+    $url = urldecode(weglot_url_to_relative($url));
+
+    //Format exclude URL
+    $excludeURL = variable_get("weglot_exclude_url", '');
+
+    if (!empty($excludeURL)) {
+        $excludeURL    = preg_replace('#\s+#', ',', trim($excludeURL));
+
+        $excludedUrls  = explode(',', $excludeURL);
+        foreach ($excludedUrls as &$ex_url) {
+            $ex_url = weglot_url_to_relative($ex_url);
+        }
+        $excludeURL = implode(',', $excludedUrls);
+    }
+
+
+    $exclusions = preg_replace('#\s+#', ',', $excludeURL);
+
+    $listRegex = [];
+    if (!empty($exclusions)) {
+        $listRegex  = explode(',', $exclusions);
+    }
+
+    foreach ($listRegex as $regex) {
+        $str          = weglot_escape_slash($regex);
+        $prepareRegex = sprintf('/%s/', $str);
+        if (preg_match($prepareRegex, $url) === 1) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function weglot_escape_slash($str) {
+    return str_replace('/', '\/', $str);
+}
+
+function weglot_url_to_relative($url){
+    if ((substr($url, 0, 7) == 'http://') || (substr($url, 0, 8) == 'https://')) {
+        // the current link is an "absolute" URL - parse it to get just the path
+        $parsed   = parse_url($url);
+        $path     = isset($parsed['path']) ? $parsed['path'] : '';
+        $query    = isset($parsed['query']) ? '?' . $parsed['query'] : '';
+        $fragment = isset($parsed['fragment']) ? '#' . $parsed['fragment'] : '';
+
+        return $path . $query . $fragment;
+    }
+    return $url;
+}
+
+
+
 
 ob_start('treatPage');
 
@@ -45,34 +99,39 @@ function treatPage($dom)
 
 
     $apiKey = variable_get("weglot_api_key", 3);
-    $path_alias = drupal_lookup_path('alias',$path);
-
 
     if(!$apiKey){
         return prepare_render_treat_page($dom);
     }
 
-    $widgetCode    =  widget_html();
     $codeLanguages = get_code_original_destination_language();
 
     global $base_url;
     $current_path = current_path();
-    $current_url  = sprintf("%s/%s/%s", $base_url,$codeLanguages['destination'], $current_path);
+    $current_url_no_language  = sprintf("%s/%s", $base_url, $current_path);
+    $current_url  = sprintf("%s/%s/%s", $base_url, $codeLanguages['destination'], $current_path);
+
+    $paramsTreatPage = array();
+
+    if(weglot_is_eligible_url($current_url_no_language)){
+        $paramsTreatPage["widget"] =  widget_html();
+    }
 
     if($codeLanguages["destination"] === $codeLanguages["original"]){
-        return prepare_render_treat_page($dom, array(
-            "widget" => $widgetCode
-        ));
+        return prepare_render_treat_page($dom, $paramsTreatPage);
     }
 
 
+    if (!weglot_is_eligible_url($current_url_no_language)) {
+        drupal_goto($current_url_no_language);
+        return;
+    }
 
     $client = new Client($apiKey);
 
-    $config = new ManualConfigProvider();
-    $config->setUrl($current_url);
+    $config = new ServerConfigProvider();
 
-    $excludeBlocks  = array("#toolbar","#overlay", ".page-admin", "#comment-body-add-more-wrapper"); // Todo : Add options + Hook drupal
+    $excludeBlocks  = array("#toolbar","#overlay", ".page-admin", "#comment-body-add-more-wrapper");
 
     $optionsExcludeBlocks = variable_get("weglot_exclude_blocks", '');
     $optionsExcludeBlocks = explode(",", $optionsExcludeBlocks);
@@ -82,9 +141,7 @@ function treatPage($dom)
 
     $content =  $parser->translate($dom, $codeLanguages["original"], $codeLanguages["destination"]);
 
-    return prepare_render_treat_page($content, array(
-            "widget" => $widgetCode
-        ));
+    return prepare_render_treat_page($content, $paramsTreatPage);
 }
 
 /**
