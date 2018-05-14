@@ -300,10 +300,17 @@ function widget_html(){
 	foreach ($listLanguages as $keyCode => $lang) {
 		if ($keyCode === $codeLanguages['destination']) {
 			continue;
-		}
+        }
 
-		$widget .= sprintf('<li class="wg-li %s">', $flag_class . $keyCode);
-		$widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', "/$keyCode/$current_path", $listLanguages[$keyCode]);
+        $widget .= sprintf('<li class="wg-li %s">', $flag_class . $keyCode);
+
+        $basePath = "/$keyCode/$current_path";
+        if($keyCode === $codeLanguages['original']){
+            $basePath = "/$current_path";
+        }
+
+		$widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', $basePath , $listLanguages[$keyCode]);
+
 		$widget .= '</li>';
 	}
 	$widget .= $listTag;
