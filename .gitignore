@@ -5,6 +5,5 @@
 ##< ide-config ##
 
 ##> composer ##
-/vendor/
 composer.lock
 ##< composer ##

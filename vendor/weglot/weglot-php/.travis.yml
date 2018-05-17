@@ -1,0 +1,63 @@
+# Tell Travis CI we are using PHP
+language: php
+
+# The platforms you wants to test on
+dist: trusty
+os:
+  - linux
+
+# Define the php versions against we want to test our code
+php:
+  - 5.5
+  - 5.6
+  - 7.0
+  - 7.1
+  - 7.2
+
+# Setting up redis server
+services:
+  - redis-server
+
+# Encrypted variables
+env:
+  global:
+    - CC_TEST_REPORTER_ID=ae26e8839888ccd9d1ee6c13f1b556d5ed91530083dd9cd8a01526f483f1200d
+  matrix:
+    secure: "cGAzQSqrK0lb8zuyvHZui+vlN3hBWt0E4Hbm7DgML/wCiVNRHKHtIPiV5eJ3PhV3hGiochJt650RIGZwiFsm9CE6nc9TSMw0o+B4EWwCMHJX5FCWFgbi7T/D148mJ08Ggyq3g5jII17cmofTczp+GKlRw9tSbyLmn4PeU6SNVQFMqWEkCscvQtmzsDGgyrfpJUwCGsIykljsV3QWahBUS6Cw95nNOFuGB2OEoQKn2w/rXsaPPgX8p2XI6FGxJsqK1GZEineeLuUqVCf/9t2/IZkO0z6iRl1MAxXlOH9HM/QLU/YK9yYdm/7z0fIdwp4XyRTTrq9hi7od2ZR/g26W7jYTaGBDJI5m5HErrxLtpNtadWcg1ayMHgnnjutXKw3Zz3j2azeAioS3vIwT9BBqGGVsac+TZA5U0Q/wMx8ZAztix4hVHcvqVz0YCqdNEfyy0O6Bdh18sSz7QTQiLcp/pxJ82IM4NVxF7mivR2/36Xw9GDZ0vAHDAn61VYEVU1ZrhKGbJh2absIE1+m8ptqx6sB2MYY5BAdFnXQsgXgJ/P0/3PETK2apwcNbpvTFb93A31EujM26igtiI9s/5k7qZ2S7NMIaSSq/kn4AvhYmRJzaLMXb3s8fsb5MazjoFm+x/NDhlSetRz3IQZodkfXBRpJVotooUAQnDnVUt2gNbCY="
+
+# We don't want to run linux commands as super user
+# false means Travis will run this in a container
+sudo: false
+
+# Install packages those will be required during build
+install:
+  - composer install --no-interaction
+  - if [ $TRAVIS_PHP_VERSION != "5.5" ]; then composer require cache/predis-adapter --dev; fi
+
+# Prepare test environment
+before_script:
+  # creating .env file
+  - cp .env.dist .env
+  # pass environment variables in travis to the app
+  - sed -i "8s/.*/WG_API_KEY=$WG_API_KEY/" .env
+  ## downloading last codeclimate test report
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+
+# To manage coverage for CodeClimate
+after_script:
+  - mv tests/_output/coverage.xml clover.xml
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+
+# $TRAVIS_PHP_VERSION
+
+# Run main commands
+script:
+  - if [ $TRAVIS_PHP_VERSION = "5.5" ]; then composer test-5.5; else composer test; fi
+
+# Cache folder, you can delete cache from Travis CI web interface
+cache:
+    directories:
+        - vendor
+        - $HOME/.composer/cache
