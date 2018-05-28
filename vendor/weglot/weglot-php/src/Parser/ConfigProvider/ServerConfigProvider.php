@@ -3,7 +3,7 @@
 namespace Weglot\Parser\ConfigProvider;
 
 use Weglot\Client\Api\Enum\BotType;
-use Weglot\Parser\Util\Server;
+use Weglot\Util\Server;
 
 /**
  * Class ServerConfigProvider

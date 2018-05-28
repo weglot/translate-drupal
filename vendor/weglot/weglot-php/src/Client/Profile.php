@@ -28,7 +28,7 @@ class Profile
      */
     protected function setup($apiKey)
     {
-        $apiKeyLength = strlen($apiKey);
+        $apiKeyLength = \strlen($apiKey);
 
         if ($apiKeyLength === 35) {
             $this

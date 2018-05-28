@@ -6,6 +6,50 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.0] - 2018-05-28
+### Added
+- Util.Url: `getForLanguage($code)` function to get given language url base on current `Url` instance
+- Api.Languages: adding data for RTL (right to left) languages and access in API objects
+### Changed
+- Util.Url: Local caching for `currentRequestAllUrls()` function
+- Updating `composer.json`
+
+## [0.4.2] - 2018-05-21
+### Fixed
+- Util.Url: handling case where prefix path has trailing slash
+### Added
+- Tests: Unit tests for Util.Url to check when prefix path as trailing slash
+
+## [0.4.1] - 2018-05-15
+### Fixed
+- Util.Url: fixing error when path is also host root
+
+## [0.4.0] - 2018-05-15
+### Added
+- Util.Url: implementing Url utility class ! with all unit tests needed
+- Tests: adding unit tests for Util\JsonLd class
+
+## [0.3.1] - 2018-05-11
+### Changed
+- Translate: when response if not array, we throw an ApiError
+### Fixed
+- Parser: if simple_html_dom can't parse the HTML, we return raw HTML with no modifications
+
+## [0.3] - 2018-05-07
+### Added
+- Client: Adding bundled CA cert for cURL
+### Changed
+- Travis: Improving script (cleaner / easier to understand)
+- Client: Guzzle removed in favor of cURL implementation
+
+## [0.2.2] - 2018-05-07
+### Fixed
+- Translate/Cache: Cached words aren't unique anymore (before, only one pair could work)
+
+## [0.2.1] - 2018-04-30
+### Fixed
+- Parser: Excluding php tags from text checker
+
 ## [0.2] - 2018-04-26
 ### Added
 - Util to fetch Site contents through `Site::get`

@@ -61,7 +61,7 @@ abstract class Endpoint
      */
     public function getPath()
     {
-        $parentClass = get_called_class();
+        $parentClass = \get_called_class();
         return $parentClass::ENDPOINT;
     }
 
@@ -79,7 +79,7 @@ abstract class Endpoint
      */
     protected function request(array $body = [], $asArray = true)
     {
-        $parentClass = get_called_class();
+        $parentClass = \get_called_class();
         $response = $this->getClient()->makeRequest($parentClass::METHOD, $parentClass::ENDPOINT, $body, $asArray);
 
         return $response;

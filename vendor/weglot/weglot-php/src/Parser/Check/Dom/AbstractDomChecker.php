@@ -5,7 +5,7 @@ namespace Weglot\Parser\Check\Dom;
 use SimpleHtmlDom\simple_html_dom_node;
 use Weglot\Client\Api\Enum\WordType;
 use Weglot\Parser\Parser;
-use Weglot\Parser\Util\Text;
+use Weglot\Util\Text;
 
 /**
  * Class AbstractChecker
@@ -128,7 +128,7 @@ abstract class AbstractDomChecker
      */
     public static function toArray()
     {
-        $class = get_called_class();
+        $class = \get_called_class();
 
         return [
             $class::DOM,

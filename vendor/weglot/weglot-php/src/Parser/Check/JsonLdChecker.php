@@ -3,7 +3,7 @@
 namespace Weglot\Parser\Check;
 
 use Weglot\Client\Api\Exception\InvalidWordTypeException;
-use Weglot\Parser\Util\JsonLd;
+use Weglot\Util\JsonLd;
 
 /**
  * Class JsonLdChecker

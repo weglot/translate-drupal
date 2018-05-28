@@ -21,7 +21,6 @@ use Weglot\Parser\Formatter\DomFormatter;
 use Weglot\Parser\Formatter\ExcludeBlocksFormatter;
 use Weglot\Parser\Formatter\IgnoredNodes;
 use Weglot\Parser\Formatter\JsonLdFormatter;
-use Weglot\Parser\Util\Site;
 
 /**
  * Class Parser
@@ -249,6 +248,12 @@ class Parser
             DEFAULT_TARGET_CHARSET,
             false
         );
+
+        // if simple_html_dom can't parse the $source, it returns false
+        // so we just return raw $source
+        if ($dom === false) {
+            return $source;
+        }
 
         // exclude blocks
         if (!empty($this->excludeBlocks)) {

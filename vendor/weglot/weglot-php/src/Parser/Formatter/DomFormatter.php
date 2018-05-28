@@ -18,7 +18,7 @@ class DomFormatter extends AbstractFormatter
     {
         $translated_words = $this->getTranslated()->getOutputWords();
 
-        for ($i = 0; $i < count($nodes); ++$i) {
+        for ($i = 0; $i < \count($nodes); ++$i) {
             $currentNode = $nodes[$i];
 
             if ($translated_words[$i] !== null) {

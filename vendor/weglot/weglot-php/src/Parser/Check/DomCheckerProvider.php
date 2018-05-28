@@ -8,7 +8,7 @@ use Weglot\Client\Api\Exception\InvalidWordTypeException;
 use Weglot\Client\Api\WordEntry;
 use Weglot\Parser\Check\Dom\AbstractDomChecker;
 use Weglot\Parser\Parser;
-use Weglot\Parser\Util\Text;
+use Weglot\Util\Text;
 
 class DomCheckerProvider
 {

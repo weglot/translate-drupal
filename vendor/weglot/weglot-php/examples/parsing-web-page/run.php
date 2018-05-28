@@ -7,7 +7,7 @@ use Weglot\Parser\Parser;
 use Weglot\Parser\ConfigProvider\ServerConfigProvider;
 use Weglot\Parser\ConfigProvider\ManualConfigProvider;
 use Weglot\Client\Api\Enum\BotType;
-use Weglot\Parser\Util\Site;
+use Weglot\Util\Site;
 
 // DotEnv
 $dotenv = new \Dotenv\Dotenv(__DIR__);

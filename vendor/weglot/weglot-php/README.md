@@ -4,8 +4,9 @@
 # PHP library
 
 <!-- tags -->
+[![WeglotSlack](https://weglot-community.now.sh/badge.svg)](https://weglot-community.now.sh/)
 [![Latest Stable Version](https://poser.pugx.org/weglot/weglot-php/v/stable)](https://packagist.org/packages/weglot/weglot-php)
-[![BuildStatus](https://travis-ci.org/weglot/weglot-php.svg?branch=develop)](https://travis-ci.org/weglot/weglot-php)
+[![BuildStatus](https://travis-ci.com/weglot/weglot-php.svg?branch=develop)](https://travis-ci.com/weglot/weglot-php)
 [![Code Climate](https://codeclimate.com/github/weglot/weglot-php/badges/gpa.svg)](https://codeclimate.com/github/weglot/weglot-php)
 [![License](https://poser.pugx.org/weglot/weglot-php/license)](https://packagist.org/packages/weglot/weglot-php)
 
@@ -13,8 +14,8 @@
 This library allows you to quickly and easily use the Weglot API via PHP. It handle all communication with Weglot API and gives you a [fully functional Parser](#getting-started) to handle HTML pages easily.
 
 ## Requirements
-- PHP version 5.5 and later
-- Weglot API Key, starting at [free level](https://dashboard.weglot.com/register)
+- PHP version 5.4 and later
+- Weglot API Key, starting at [free level](https://dashboard.weglot.com/register?origin=9)
 
 ## Installation
 You can install the library via [Composer](https://getcomposer.org/). Run the following command:
@@ -51,7 +52,7 @@ $parser = new Parser($client, $config);
 $translatedContent = $parser->translate($content, 'en', 'de');
 ```
 
-For more details, check at [corresponding example](./examples/parsing-web-page/run.php) or at [documentation](https://weglot.github.io/weglot-documentation/#parser).
+For more details, check at [corresponding example](./examples/parsing-web-page/run.php) or at [documentation](https://weglot.github.io/documentation/#parser).
 
 ## Examples
 
@@ -61,7 +62,7 @@ You can take a look at: [examples](./examples) folder. You'll find a short READM
 
 ## Documentation
 
-You can find a documentation for our libraries at: https://weglot.github.io/weglot-documentation/
+You can find a documentation for our libraries at: https://weglot.github.io/documentation/
 
 ## About
 `weglot-php` is guided and supported by the Weglot Developer Team.

@@ -3,7 +3,7 @@
 namespace Weglot\Parser\Check\Dom;
 
 use Weglot\Client\Api\Enum\WordType;
-use Weglot\Parser\Util\Text as TextUtil;
+use Weglot\Util\Text as TextUtil;
 
 /**
  * Class LinkHref
@@ -43,7 +43,7 @@ class LinkHref extends AbstractDomChecker
         $boolean = false;
 
         foreach ($this->extensions as $extension) {
-            $start = (strlen($extension) + 1) * -1;
+            $start = (\strlen($extension) + 1) * -1;
             $boolean = $boolean || (strtolower(substr(TextUtil::fullTrim($this->node->href), $start)) === ('.' .$extension));
         }
 

@@ -68,7 +68,7 @@ class ParserTest extends \Codeception\Test\Unit
             'de'
         );
 
-        $this->assertTrue(is_string($translatedContent));
+        $this->assertTrue(\is_string($translatedContent));
     }
 
     public function testTranslateServer()
@@ -82,7 +82,7 @@ class ParserTest extends \Codeception\Test\Unit
             'en',
             'de'
         );
-        $this->assertTrue(is_string($translatedContent));
+        $this->assertTrue(\is_string($translatedContent));
     }
 
     private function _getContent($url)

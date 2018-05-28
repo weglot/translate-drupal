@@ -3,7 +3,7 @@
 namespace Weglot\Parser\Check\Dom;
 
 use Weglot\Client\Api\Enum\WordType;
-use Weglot\Parser\Util\Text as TextUtil;
+use Weglot\Util\Text as TextUtil;
 
 /**
  * Class Button

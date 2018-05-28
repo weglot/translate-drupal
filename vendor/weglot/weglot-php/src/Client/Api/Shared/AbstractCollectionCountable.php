@@ -13,6 +13,6 @@ trait AbstractCollectionCountable
      */
     public function count()
     {
-        return count($this->collection);
+        return \count($this->collection);
     }
 }

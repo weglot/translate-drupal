@@ -7,7 +7,6 @@ use Weglot\Client\Api\Exception\InputAndOutputCountMatchException;
 use Weglot\Client\Api\Exception\InvalidWordTypeException;
 use Weglot\Client\Api\Exception\MissingRequiredParamException;
 use Weglot\Client\Api\Exception\MissingWordsOutputException;
-use Psr\Cache\InvalidArgumentException;
 use Weglot\Client\Api\TranslateEntry;
 use Weglot\Client\Client;
 use Weglot\Client\Factory\Translate as TranslateFactory;
@@ -57,18 +56,24 @@ class Translate extends Endpoint
     }
 
     /**
-     * @param TranslateEntry $translateEntry
      * @return array
-     * @throws InvalidArgumentException
      */
-    protected function beforeRequest(TranslateEntry $translateEntry)
+    protected function beforeRequest()
     {
         // init
-        $words = $translateEntry->getInputWords()->jsonSerialize();
+        $words = $this->getTranslateEntry()->getInputWords()->jsonSerialize();
         $requestWords = $cachedWords = $fullWords = [];
+
+        $defaultParams = [
+            'from' => $this->getTranslateEntry()->getParams('language_from'),
+            'to' => $this->getTranslateEntry()->getParams('language_to')
+        ];
 
         // fetch words to check if anything hit the cache
         foreach ($words as $key => $word) {
+
+            // adding from & to languages to make key unique by language-pair
+            $word = array_merge($word, $defaultParams);
             $cachedWord = $this->getCache()->getWithGenerate($word);
 
             // default behavior > sending word to request
@@ -84,7 +89,7 @@ class Translate extends Endpoint
             }
 
             // get next element place
-            $next = count($array);
+            $next = \count($array);
 
             // apply choosed behavior
             $array[$next] = $element;
@@ -105,13 +110,17 @@ class Translate extends Endpoint
      * @param array $response
      * @param array $beforeRequestResult
      * @return array
-     * @throws InvalidArgumentException
      */
     protected function afterRequest(array $response, array $beforeRequestResult)
     {
         // init
         list($requestWords, $cachedWords, $fullWords) = $beforeRequestResult;
         $fromWords = $toWords = [];
+
+        $defaultParams = [
+            'from' => $this->getTranslateEntry()->getParams('language_from'),
+            'to' => $this->getTranslateEntry()->getParams('language_to')
+        ];
 
         // fetch all words in one array
         foreach ($fullWords as $key => $details) {
@@ -128,7 +137,9 @@ class Translate extends Endpoint
             $to = $response['to_words'][$details['place']];
 
             // caching requested word
+            $word = array_merge($word, $defaultParams);
             $cachedWord = $this->getCache()->getWithGenerate($word);
+
             $cachedWord->set([
                 'from' => $from,
                 'to' => $to
@@ -153,7 +164,6 @@ class Translate extends Endpoint
      * @throws InvalidWordTypeException
      * @throws MissingRequiredParamException
      * @throws MissingWordsOutputException
-     * @throws InvalidArgumentException
      */
     public function handle()
     {
@@ -161,12 +171,15 @@ class Translate extends Endpoint
         $asArray = $this->translateEntry->jsonSerialize();
 
         if ($this->getCache()->enabled()) {
-            $beforeRequest = $this->beforeRequest($this->translateEntry);
+            $beforeRequest = $this->beforeRequest();
             $asArray['words'] = $beforeRequest[0];
         }
 
         $response = $this->request($asArray);
-
+        if (!is_array($response)) {
+            throw new ApiError('Response is not an array: ' .$response, $asArray);
+        }
+        
         if ($this->getCache()->enabled()) {
             $response = $this->afterRequest($response, $beforeRequest);
         }

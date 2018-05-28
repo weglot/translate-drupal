@@ -1,12 +1,14 @@
 {
   "name": "weglot/weglot-php",
   "description": "PHP library for the Weglot API",
+  "homepage": "https://weglot.com/",
   "type": "library",
   "license": "MIT",
   "authors": [
     {
       "name": "Baptiste Leduc",
       "email": "baptiste@weglot.com",
+      "homepage": "https://baptiste-leduc.now.sh/",
       "role": "Developer"
     },
     {
@@ -16,11 +18,23 @@
     }
   ],
   "support": {
-    "email": "support@weglot.com"
+    "email": "support@weglot.com",
+    "source": "https://github.com/weglot/weglot-php",
+    "docs": "https://weglot.github.io/weglot-documentation/"
   },
+  "keywords": [
+    "php",
+    "weglot",
+    "weglot-library",
+    "translate",
+    "translation",
+    "translator",
+    "localization",
+    "languages",
+    "i18n"
+  ],
   "require": {
-    "php": ">=5.5",
-    "guzzlehttp/guzzle": "^6.3",
+    "php": ">=5.4",
     "weglot/simplehtmldom": "^0.2",
     "psr/cache": "^1.0"
   },
@@ -30,11 +44,7 @@
     }
   },
   "require-dev": {
-    "codeception/codeception": "^2.4",
-    "vlucas/phpdotenv": "^2.4"
-  },
-  "scripts": {
-    "test": "./vendor/bin/codecept run unit --coverage --coverage-xml --no-interaction",
-    "test-5.5": "./vendor/bin/codecept run unit --no-interaction  -g client -g parser"
+    "vlucas/phpdotenv": "^2.4",
+    "codeception/codeception": "^2.4"
   }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use Weglot\Client\Client;
+use Weglot\Client\HttpClient\CurlClient;
 
 class ClientTest extends \Codeception\Test\Unit
 {
@@ -28,31 +29,21 @@ class ClientTest extends \Codeception\Test\Unit
         $options = $this->client->getOptions();
 
         $this->assertEquals('https://api.weglot.com', $options['host']);
-
-        $curlVersion = curl_version();
-        $userAgent = implode(' / ', [
-            'curl' =>  'cURL\\' .$curlVersion['version'],
-            'ssl' => $curlVersion['ssl_version'],
-            'weglot' => 'Weglot\\' .Client::VERSION
-        ]);
-        $this->assertEquals($userAgent, $options['user-agent']);
     }
 
     public function testConnector()
     {
-        $connector = $this->client->getConnector();
+        $httpClient = $this->client->getHttpClient();
 
-        $this->assertTrue($connector instanceof GuzzleHttp\Client);
-        $this->assertEquals('api.weglot.com', $connector->getConfig('base_uri')->getHost());
-        $this->assertEquals('application/json', $connector->getConfig('headers')['Content-Type']);
+        $this->assertTrue($httpClient instanceof CurlClient);
 
         $curlVersion = curl_version();
-        $userAgent = implode(' / ', [
+        $userAgentInfo = [
             'curl' =>  'cURL\\' .$curlVersion['version'],
             'ssl' => $curlVersion['ssl_version'],
             'weglot' => 'Weglot\\' .Client::VERSION
-        ]);
-        $this->assertEquals($userAgent, $connector->getConfig('headers')['User-Agent']);
+        ];
+        $this->assertEquals($userAgentInfo, $httpClient->getUserAgentInfo());
     }
 
     public function testProfile()
@@ -78,7 +69,7 @@ class ClientTest extends \Codeception\Test\Unit
 
     public function testMakeRequestAsResponse()
     {
-        $response = $this->client->makeRequest('GET', '/status', [], false);
-        $this->assertTrue($response->getStatusCode() === 200);
+        list($rawBody, $httpStatusCode, $httpHeader) = $this->client->makeRequest('GET', '/status', [], false);
+        $this->assertTrue($httpStatusCode === 200);
     }
 }

@@ -2,13 +2,14 @@
 
 namespace Weglot\Client;
 
-use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ResponseInterface;
 use Weglot\Client\Api\Exception\ApiError;
 use Weglot\Client\Caching\Cache;
 use Weglot\Client\Caching\CacheInterface;
+use Weglot\Client\HttpClient\ClientInterface;
+use Weglot\Client\HttpClient\CurlClient;
 
 /**
  * Class Client
@@ -21,7 +22,7 @@ class Client
      *
      * @var string
      */
-    const VERSION = '0.2';
+    const VERSION = '0.5.0';
 
     /**
      * Weglot API Key
@@ -38,11 +39,11 @@ class Client
     protected $options;
 
     /**
-     * Http connector
+     * Http Client
      *
-     * @var GuzzleClient
+     * @var ClientInterface
      */
-    protected $connector;
+    protected $httpClient;
 
     /**
      * @var Profile
@@ -65,6 +66,7 @@ class Client
         $this->profile = new Profile($apiKey);
 
         $this
+            ->setHttpClient()
             ->setOptions($options)
             ->setCache();
     }
@@ -74,32 +76,7 @@ class Client
      */
     protected function setupConnector()
     {
-        $this->connector = new GuzzleClient([
-            'base_uri' => $this->options['host'],
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'User-Agent' => $this->options['user-agent']
-            ],
-            'query' => [
-                'api_key' => $this->apiKey
-            ]
-        ]);
-    }
-
-    /**
-     * @return string
-     */
-    protected function makeUserAgent()
-    {
-        $curlVersion = curl_version();
-
-        $userAgentArray = [
-            'curl' =>  'cURL\\' .$curlVersion['version'],
-            'ssl' => $curlVersion['ssl_version'],
-            'weglot' => 'Weglot\\' .self::VERSION
-        ];
-
-        return implode(' / ', $userAgentArray);
+        $this->httpClient = new CurlClient();
     }
 
     /**
@@ -110,8 +87,7 @@ class Client
     public function defaultOptions()
     {
         return [
-            'host'  => 'https://api.weglot.com',
-            'user-agent' => $this->makeUserAgent()
+            'host'  => 'https://api.weglot.com'
         ];
     }
 
@@ -131,19 +107,31 @@ class Client
     {
         // merging default options with user options
         $this->options = array_merge($this->defaultOptions(), $options);
-
-        // then loading / reloading http connector
-        $this->setupConnector();
-
         return $this;
     }
 
     /**
-     * @return GuzzleClient
+     * @param null|ClientInterface $httpClient
+     * @return $this
      */
-    public function getConnector()
+    public function setHttpClient($httpClient = null)
     {
-        return $this->connector;
+        if ($httpClient === null) {
+            $httpClient = new CurlClient();
+            $httpClient->addUserAgentInfo('weglot', 'Weglot\\' .self::VERSION);
+        }
+        if ($httpClient instanceof ClientInterface) {
+            $this->httpClient = $httpClient;
+        }
+        return $this;
+    }
+
+    /**
+     * @return ClientInterface
+     */
+    public function getHttpClient()
+    {
+        return $this->httpClient;
     }
 
     /**
@@ -201,17 +189,30 @@ class Client
     public function makeRequest($method, $endpoint, $body = [], $asArray = true)
     {
         try {
-            $response = $this->connector->request($method, $endpoint, [
-                'json' => $body
-            ]);
-            $array = json_decode($response->getBody()->getContents(), true);
-        } catch (GuzzleException $e) {
+            list($rawBody, $httpStatusCode, $httpHeader) = $this->getHttpClient()->request(
+                $method,
+                $this->makeAbsUrl($endpoint),
+                ['api_key' => $this->apiKey],
+                $body
+            );
+
+            $array = json_decode($rawBody, true);
+        } catch (\Exception $e) {
             throw new ApiError($e->getMessage(), $body);
         }
 
         if ($asArray) {
             return $array;
         }
-        return $response;
+        return [$rawBody, $httpStatusCode, $httpHeader];
+    }
+
+    /**
+     * @param string $endpoint
+     * @return string
+     */
+    protected function makeAbsUrl($endpoint)
+    {
+        return $this->options['host'] . $endpoint;
     }
 }

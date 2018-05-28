@@ -1,6 +1,6 @@
 <?php
 
-namespace Weglot\Parser\Util;
+namespace Weglot\Util;
 
 /**
  * Class Site

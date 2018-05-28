@@ -33,16 +33,26 @@ class LanguageEntry extends AbstractCollectionEntry
     protected $localName;
 
     /**
+     * Language is right to left
+     *
+     * @var bool
+     */
+    protected $isRtl;
+
+    /**
      * LanguageEntry constructor.
      * @param string $iso_639_1     ISO 639-1 code to identify language
      * @param string $englishName   English name of the language
      * @param string $localName     Name of the language in the language
+     * @param bool $isRtl           Language is right to left
      */
-    public function __construct($iso_639_1, $englishName, $localName)
+    public function __construct($iso_639_1, $englishName, $localName, $isRtl = false)
     {
-        $this->setIso639($iso_639_1)
+        $this
+            ->setIso639($iso_639_1)
             ->setEnglishName($englishName)
-            ->setLocalName($localName);
+            ->setLocalName($localName)
+            ->setRtl($isRtl);
     }
 
     /**
@@ -103,6 +113,25 @@ class LanguageEntry extends AbstractCollectionEntry
     }
 
     /**
+     * @param bool $rtl
+     * @return $this
+     */
+    public function setRtl($rtl)
+    {
+        $this->isRtl = $rtl;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRtl()
+    {
+        return $this->isRtl;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function jsonSerialize()
@@ -110,7 +139,8 @@ class LanguageEntry extends AbstractCollectionEntry
         return [
             'code'      => $this->getIso639(),
             'english'   => $this->getEnglishName(),
-            'local'     => $this->getLocalName()
+            'local'     => $this->getLocalName(),
+            'rtl'       => $this->isRtl(),
         ];
     }
 }

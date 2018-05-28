@@ -81,10 +81,18 @@ class TranslateEntry implements JsonSerializable
     }
 
     /**
-     * @return array
+     * @param null|string $key
+     * @return array|bool|mixed
      */
-    public function getParams()
+    public function getParams($key = null)
     {
+        if ($key !== null) {
+            if (isset($this->params[$key])) {
+                return $this->params[$key];
+            }
+            return false;
+        }
+
         return $this->params;
     }
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Weglot\Parser\Util;
+namespace Weglot\Util;
 
 use Weglot\Client\Api\Enum\WordType;
 use Weglot\Client\Api\Exception\InvalidWordTypeException;
