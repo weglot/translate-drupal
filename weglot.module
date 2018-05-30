@@ -20,6 +20,10 @@ use Weglot\Parser\ConfigProvider\ServerConfigProvider;
 
 define('WEGLOT_VERSION', '1.5');
 
+if(!class_exists('Weglot\Util\Url')){
+  return;
+}
+
 /**
  * Helper function
  *
