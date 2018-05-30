@@ -6,3 +6,4 @@ core = 7.x
 project = "weglot"
 dependencies[] = path
 dependencies[] = locale
+dependencies[] = composer_manager

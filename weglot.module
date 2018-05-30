@@ -1,7 +1,5 @@
 <?php
 
-require(drupal_get_path('module', 'weglot') . '/vendor/autoload.php');
-
 use Weglot\Client\Factory\Languages;
 use Weglot\Client\Api\TranslateEntry;
 use Weglot\Client\Api\WordEntry;
@@ -36,6 +34,11 @@ function get_code_original_destination_language()
     );
 }
 
+/**
+ * Get Weglot URL Object
+ *
+ * @return Weglot\Util\Url
+ */
 function weglot_get_url_object()
 {
     $codeLanguages = get_code_original_destination_language();
@@ -66,6 +69,12 @@ function weglot_get_url_object()
 
 ob_start('weglot_treat_page');
 
+/**
+ * Parse and translate DOM
+ *
+ * @param string $dom
+ * @return string
+ */
 function weglot_treat_page($dom)
 {
     if (empty($dom) || arg(0) === "admin") { // Empty or only front
@@ -245,11 +254,15 @@ function admin_weglot()
     return system_settings_form($form);
 }
 
+/**
+ * Get widget selector
+ *
+ * @return string
+ */
 function widget_html()
 {
     $codeLanguages = get_code_original_destination_language();
     $isDropdown    = true;
-    $withname      = true;
     $flagClass     = 'wg-flags ';
     $tag           = $isDropdown ? 'div' : 'li';
     $listTag       = $isDropdown ? '<ul>' : '';
