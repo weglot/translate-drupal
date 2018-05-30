@@ -115,7 +115,7 @@ function weglot_treat_page($dom) {
     }
 
     if (!$weglot_url->isTranslable()) {
-        drupal_goto($current_url_no_language);
+        drupal_goto($weglot_url->getForLanguage($code_languages["original"]));
         return;
     }
 
