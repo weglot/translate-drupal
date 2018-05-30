@@ -1,7 +1,7 @@
 name = Weglot
 description = Translate your website into multiple languages in minutes without doing any coding. Fully SEO compatible.
 package = Multilingual
-version = 1.0-beta
+version = 1.4
 core = 7.x
 project = "weglot"
 dependencies[] = path
