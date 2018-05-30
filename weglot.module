@@ -1,4 +1,9 @@
 <?php
+/**
+ * @file
+ * Module weglot
+ */
+
 
 use Weglot\Client\Factory\Languages;
 use Weglot\Client\Api\TranslateEntry;
@@ -13,24 +18,24 @@ use Weglot\Parser\Parser;
 use Weglot\Parser\ConfigProvider\ManualConfigProvider;
 use Weglot\Parser\ConfigProvider\ServerConfigProvider;
 
-define('WEGLOT_VERSION', '1.4');
+define('WEGLOT_VERSION', '1.5');
 
 /**
  * Helper function
  *
  * @return array
+ *   An array with original and destination language available
  */
-function get_code_original_destination_language()
-{
+function get_code_original_destination_language() {
     global $language;
-    $originalLanguage = language_default();
+    $original_language = language_default();
 
-    $codeOriginalLanguage    = $originalLanguage->language;
-    $codeDestinationLanguage = $language->language;
+    $code_original_language    = $original_language->language;
+    $code_destination_language = $language->language;
 
     return array(
-        'original' => $codeOriginalLanguage,
-        'destination' => $codeDestinationLanguage
+        'original' => $code_original_language,
+        'destination' => $code_destination_language
     );
 }
 
@@ -38,32 +43,36 @@ function get_code_original_destination_language()
  * Get Weglot URL Object
  *
  * @return Weglot\Util\Url
+ *   It is an object define if an URL is translable
  */
-function weglot_get_url_object()
-{
-    $codeLanguages = get_code_original_destination_language();
-    $destinationLanguages  = locale_language_list();
+function weglot_get_url_object() {
+    $code_languages = get_code_original_destination_language();
+    $destination_languages  = locale_language_list();
 
 
-    if (array_key_exists($codeLanguages['original'], $destinationLanguages)) {
-        unset($destinationLanguages[$codeLanguages['original']]);
+    if (array_key_exists($code_languages['original'], $destination_languages)) {
+        unset($destination_languages[$code_languages['original']]);
     }
-    $destinationLanguages = array_keys($destinationLanguages);
+    $destination_languages = array_keys($destination_languages);
 
-    $weglotUrl = new Url(
+    $weglot_url = new Url(
       Server::fullUrl($_SERVER),
-      $codeLanguages['original'],
-      $destinationLanguages
+      $code_languages['original'],
+      $destination_languages
     );
 
-    $excludeUrls = variable_get("weglot_exclude_url", "");
-    if (empty($excludeUrls)) {
-        $excludeUrls = array();
+    $exclude_urls = variable_get("weglot_exclude_url", "");
+    if (empty($exclude_urls)) {
+        $exclude_urls = array();
+    }
+    else{
+      $exclude_urls = explode(',', $exclude_urls);
     }
 
-    $weglotUrl->setExcludedUrls($excludeUrls);
+    $weglot_url->setExcludedUrls($exclude_urls);
+    $weglot_url->detectUrlDetails();
 
-    return $weglotUrl;
+    return $weglot_url;
 }
 
 
@@ -73,64 +82,67 @@ ob_start('weglot_treat_page');
  * Parse and translate DOM
  *
  * @param string $dom
+ *    Current DOM
  * @return string
+ *    DOM Translated
  */
-function weglot_treat_page($dom)
-{
+function weglot_treat_page($dom) {
     if (empty($dom) || arg(0) === "admin") { // Empty or only front
         return prepare_render_treat_page($dom);
     }
 
-    $apiKey = variable_get("weglot_api_key", '');
+    $api_key = variable_get("weglot_api_key", '');
 
-    if (!$apiKey) {
+    if (!$api_key) {
         return prepare_render_treat_page($dom);
     }
 
-    $codeLanguages = get_code_original_destination_language();
+    $code_languages = get_code_original_destination_language();
 
-    $weglotUrl = weglot_get_url_object();
+    $weglot_url = weglot_get_url_object();
 
-    $paramsTreatPage = array();
+    $params_treat_page = array();
 
-    if ($weglotUrl->isTranslable()) {
-        $paramsTreatPage["widget"] =  widget_html();
+    if ($weglot_url->isTranslable()) {
+        $params_treat_page["widget"] =  widget_html();
     }
 
-    if ($codeLanguages["destination"] === $codeLanguages["original"]) {
-        return prepare_render_treat_page($dom, $paramsTreatPage);
+    if ($code_languages["destination"] === $code_languages["original"]) {
+        return prepare_render_treat_page($dom, $params_treat_page);
     }
 
-    if (!$weglotUrl->isTranslable()) {
-        drupal_goto($currentUrlNoLanguage);
+    if (!$weglot_url->isTranslable()) {
+        drupal_goto($current_url_no_language);
         return;
     }
 
-    $client = new Client($apiKey);
+    $client = new Client($api_key);
     $config = new ServerConfigProvider();
 
-    $excludeBlocks  = array("#toolbar","#overlay", ".page-admin", "#comment-body-add-more-wrapper");
+    $exclude_blocks  = array("#toolbar", "#overlay", ".page-admin", "#comment-body-add-more-wrapper");
 
-    $optionsExcludeBlocks = variable_get("weglot_exclude_blocks", '');
-    $optionsExcludeBlocks = explode(",", $optionsExcludeBlocks);
-    $excludeBlocks = array_merge($excludeBlocks, $optionsExcludeBlocks);
+    $options_exclude_blocks = variable_get("weglot_exclude_blocks", '');
+    $options_exclude_blocks = explode(",", $options_exclude_blocks);
+    $exclude_blocks = array_merge($exclude_blocks, $options_exclude_blocks);
 
-    $parser = new Parser($client, $config, $excludeBlocks);
+    $parser = new Parser($client, $config, $exclude_blocks);
 
-    $content =  $parser->translate($dom, $codeLanguages["original"], $codeLanguages["destination"]);
+    $content =  $parser->translate($dom, $code_languages["original"], $code_languages["destination"]);
 
-    return prepare_render_treat_page($content, $paramsTreatPage);
+    return prepare_render_treat_page($content, $params_treat_page);
 }
 
 /**
  * Render treat page
  *
  * @param string $dom
+ *   DOM you want render
  * @param array $params
+ *   Params use for change the DOM. Like a widget selector
  * @return string
+ *   The new DOM with the changes
  */
-function prepare_render_treat_page($dom, $params = array())
-{
+function prepare_render_treat_page($dom, $params = array()) {
     if (isset($params["widget"])) {
         return str_replace('</body>', $params["widget"] . '</body>', $dom);
     }
@@ -139,12 +151,9 @@ function prepare_render_treat_page($dom, $params = array())
 }
 
 /**
- * Impletation of hook_preprocess_page
- *
- * @return void
+ * Implements hook_preprocess_page().
  */
-function weglot_preprocess_page(&$vars, $hook)
-{
+function weglot_preprocess_page(&$vars, $hook) {
     if (arg(0) !== "admin") { // Only front
         drupal_add_js(drupal_get_path('module', 'weglot') . '/weglot-front.js');
         drupal_add_css(drupal_get_path('module', 'weglot') . '/weglot-front.css');
@@ -153,20 +162,18 @@ function weglot_preprocess_page(&$vars, $hook)
 
 
 /**
- * Implementation of hook_permission().
+ * Implements hook_permission().
  */
-function weglot_permission()
-{
+function weglot_permission() {
     return array(
         'access weglot' => array('title' => t('Access weglot'))
     );
 }
 
 /**
- * Implementation of hook_block_info()
+ * Implements hook_block_info().
  */
-function weglot_block_info()
-{
+function weglot_block_info() {
     $block['weglot'] = array(
         'info' => t('Block info de weglot')
     );
@@ -175,10 +182,9 @@ function weglot_block_info()
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
-function weglot_menu()
-{
+function weglot_menu() {
     $items = array();
 
     $items['admin/settings/weglot'] = array(
@@ -194,10 +200,9 @@ function weglot_menu()
 }
 
 /**
- * Implementation of hook_preprocess_html
+ * Implements hook_preprocess_html().
  */
-function weglot_preprocess_html(&$variables)
-{
+function weglot_preprocess_html(&$variables) {
     // Add conditional stylesheets for admin pages on admin theme.
     if (arg(0)=="admin") {
         // reference your own stylesheet
@@ -210,13 +215,12 @@ function weglot_preprocess_html(&$variables)
 /**
  * Callback from weglot_menu
  */
-function admin_weglot()
-{
+function admin_weglot() {
     $form['general'] = array(
         '#type' => 'fieldset',
         '#title' => t('General Configuration'),
-        '#collapsible' => false,
-        '#collapsed' => false,
+        '#collapsible' => FALSE,
+        '#collapsed' => FALSE,
     );
 
     $form['general']['weglot_api_key'] = array(
@@ -225,15 +229,15 @@ function admin_weglot()
         '#default_value' => variable_get('weglot_api_key', ''),
         '#description' => t("Log in to <a target='_blank' href='https://weglot.com/register-wordpress
 '>Weglot</a> to get your API key."),
-        '#required' => true
+        '#required' => TRUE
     );
 
     $form['exclusion'] = array(
         '#type' => 'fieldset',
         '#title' => t('Translation exclusion (optional)'),
         '#description' => t('By default, every page is translated. You can exclude parts of a page or a full page here.'),
-        '#collapsible' => true,
-        '#collapsed' => false,
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
     );
 
     $form['exclusion']['weglot_exclude_url'] = array(
@@ -258,35 +262,35 @@ function admin_weglot()
  * Get widget selector
  *
  * @return string
+ *   Return widget selector
  */
-function widget_html()
-{
-    $codeLanguages = get_code_original_destination_language();
-    $isDropdown    = true;
-    $flagClass     = 'wg-flags ';
-    $tag           = $isDropdown ? 'div' : 'li';
-    $listTag       = $isDropdown ? '<ul>' : '';
+function widget_html() {
+    $code_languages = get_code_original_destination_language();
+    $is_dropdown    = TRUE;
+    $flag_class     = 'wg-flags ';
+    $tag           = $is_dropdown ? 'div' : 'li';
+    $list_tag       = $is_dropdown ? '<ul>' : '';
 
     $widget = sprintf('<!--Weglot %s-->', WEGLOT_VERSION);
     $widget .= "<aside data-wg-notranslate='' id='weglot-selector' class='wg-default wg-drop country-selector closed'>";
 
-    $weglotUrl = weglot_get_url_object();
-    $listLanguages = locale_language_list();
-    $widget .= sprintf('<%s data-wg-notranslate="" class="wgcurrent wg-li wg-flags %s"><a href="#" onclick="return false;">%s</a></%s>', $tag, $codeLanguages["destination"], $listLanguages[$codeLanguages["destination"]], $tag);
+    $weglot_url = weglot_get_url_object();
+    $list_languages = locale_language_list();
+    $widget .= sprintf('<%s data-wg-notranslate="" class="wgcurrent wg-li wg-flags %s"><a href="#" onclick="return false;">%s</a></%s>', $tag, $code_languages["destination"], $list_languages[$code_languages["destination"]], $tag);
 
-    $widget .= $listTag;
-    foreach ($listLanguages as $keyCode => $lang) {
-        if ($keyCode === $codeLanguages['destination']) {
+    $widget .= $list_tag;
+    foreach ($list_languages as $key_code => $lang) {
+        if ($key_code === $code_languages['destination']) {
             continue;
         }
 
-        $widget .= sprintf('<li class="wg-li %s">', $flagClass . $keyCode);
-        $urlSwitch = $weglotUrl->getForLanguage($keyCode);
-        $widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', $urlSwitch, $listLanguages[$keyCode]);
+        $widget .= sprintf('<li class="wg-li %s">', $flag_class . $key_code);
+        $url_switch = $weglot_url->getForLanguage($key_code);
+        $widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', $url_switch, $list_languages[$key_code]);
 
         $widget .= '</li>';
     }
-    $widget .= $listTag;
+    $widget .= $list_tag;
 
     $widget .= "</aside>";
 

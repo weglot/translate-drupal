@@ -1,3 +1,8 @@
+/**
+ * @file
+ * Admin weglot check API
+ */
+
 (function($) {
 
     $(document).ready(function() {

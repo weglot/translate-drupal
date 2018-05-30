@@ -1,3 +1,7 @@
+/**
+ * @file
+ * Weglot switcher
+ */
 
 (function() {
     document.addEventListener('DOMContentLoaded', function(){
@@ -10,7 +14,7 @@
                 var body = document.body,
                     html = document.documentElement;
                 var page_height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
-                var h = getOffset(this).top;
+                var h = get_offset(this).top;
 
                 var position = window
                     .getComputedStyle(this)
@@ -29,7 +33,7 @@
             });
         }
 
-        function getOffset(element) {
+        function get_offset(element) {
             var top = 0,
                 left = 0;
             do {

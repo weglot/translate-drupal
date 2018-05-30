@@ -8,8 +8,7 @@
 /**
  * Implements hook_requirements().
  */
-function weglot_requirements($phase)
-{
+function weglot_requirements($phase) {
     $requirements = array();
     if ($phase == 'runtime') {
         if (!class_exists('\Weglot\Util\Url')) {
