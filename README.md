@@ -1,6 +1,10 @@
 <!-- logo -->
 <img src="https://cdn.weglot.com/logo/logo-hor.png" height="40" />
+
 [![Weglot Slack][slack-image]][slack-url]
+
+[slack-image]: https://weglot-community.now.sh/badge.svg
+[slack-url]: https://weglot-community.now.sh/
 
 CONTENTS OF THIS FILE
 ---------------------
@@ -21,9 +25,6 @@ The Weglot translate  allows you to translate your entire website in minutes.
 
  * To submit bug reports and feature suggestions, or to track changes:
    https://drupal.org/project/issues/weglot
-
-
-
 
 
 REQUIREMENTS
@@ -50,7 +51,3 @@ Current maintainers:
 
 This project has been developed by:
  * Weglot - https://weglot.com
-
-[slack-image]: https://weglot-community.now.sh/badge.svg
-[slack-url]: https://weglot-community.now.sh/
-
