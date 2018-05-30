@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Updating Drupal coding standard
 - Remove vendors and add requirement with Composer Manager
+- Bugfix : Error on redirection if URL is not translable
 
 ## [1.4] - 2018-05-30
 ### Added
