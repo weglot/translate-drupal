@@ -63,6 +63,32 @@ class UrlTest extends \Codeception\Test\Unit
         $this->_checkResults($url, $profile);
     }
 
+    public function testSimpleUrlDefaultFrWithEnUrlAndCustomPort()
+    {
+        $profile = [
+            'url' => 'https://www.ratp.fr:3000/en/horaires',
+            'default' => 'fr',
+            'languages' => ['en'],
+            'prefix' => '',
+            'exclude' => [],
+            'results' => [
+                'getHost' => 'https://www.ratp.fr:3000',
+                'getPathPrefix' => '',
+                'detectBaseUrl' => 'https://www.ratp.fr:3000/horaires',
+                'getBaseUrl' => '/horaires',
+                'isTranslable' => true,
+                'detectCurrentLanguage' => 'en',
+                'currentRequestAllUrls' => [
+                    'fr' => 'https://www.ratp.fr:3000/horaires',
+                    'en' => 'https://www.ratp.fr:3000/en/horaires',
+                ]
+            ]
+        ];
+
+        $url = $this->_urlInstance($profile);
+        $this->_checkResults($url, $profile);
+    }
+
     public function testSimpleUrlDefaultFrWithFrUrl()
     {
         $profile = [
@@ -165,6 +191,34 @@ class UrlTest extends \Codeception\Test\Unit
                     'fr' => 'https://weglot.com/web/fr/',
                     'de' => 'https://weglot.com/web/de/',
                     'es' => 'https://weglot.com/web/es/'
+                ]
+            ]
+        ];
+
+        $url = $this->_urlInstance($profile);
+        $this->_checkResults($url, $profile);
+    }
+
+    public function testUrlDefaultEnWithEnUrlAndPrefixAsUrlAndCustomPort()
+    {
+        $profile = [
+            'url' => 'https://weglot.com:8080/web/es/',
+            'default' => 'en',
+            'languages' => ['fr', 'de', 'es'],
+            'prefix' => '/web',
+            'exclude' => [],
+            'results' => [
+                'getHost' => 'https://weglot.com:8080',
+                'getPathPrefix' => '/web',
+                'getBaseUrl' => '/',
+                'isTranslable' => true,
+                'detectCurrentLanguage' => 'es',
+                'detectBaseUrl' => 'https://weglot.com:8080/web/',
+                'currentRequestAllUrls' => [
+                    'en' => 'https://weglot.com:8080/web/',
+                    'fr' => 'https://weglot.com:8080/web/fr/',
+                    'de' => 'https://weglot.com:8080/web/de/',
+                    'es' => 'https://weglot.com:8080/web/es/'
                 ]
             ]
         ];

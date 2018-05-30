@@ -15,7 +15,7 @@ use Weglot\Parser\Parser;
 use Weglot\Parser\ConfigProvider\ManualConfigProvider;
 use Weglot\Parser\ConfigProvider\ServerConfigProvider;
 
-define('WEGLOT_VERSION', '1.0');
+define('WEGLOT_VERSION', '1.4');
 
 /**
  * Helper function
@@ -41,10 +41,16 @@ function weglot_get_url_object()
     $codeLanguages = get_code_original_destination_language();
     $destinationLanguages  = locale_language_list();
 
+
+    if (array_key_exists($codeLanguages['original'], $destinationLanguages)) {
+        unset($destinationLanguages[$codeLanguages['original']]);
+    }
+    $destinationLanguages = array_keys($destinationLanguages);
+
     $weglotUrl = new Url(
       Server::fullUrl($_SERVER),
       $codeLanguages['original'],
-      array_keys($destinationLanguages)
+      $destinationLanguages
     );
 
     $excludeUrls = variable_get("weglot_exclude_url", "");
@@ -66,7 +72,7 @@ function weglot_treat_page($dom)
         return prepare_render_treat_page($dom);
     }
 
-    $apiKey = variable_get("weglot_api_key", 3);
+    $apiKey = variable_get("weglot_api_key", '');
 
     if (!$apiKey) {
         return prepare_render_treat_page($dom);
@@ -262,8 +268,8 @@ function widget_html()
         }
 
         $widget .= sprintf('<li class="wg-li %s">', $flagClass . $keyCode);
-
-        $widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', $weglotUrl->getForLanguage($keyCode), $listLanguages[$keyCode]);
+        $urlSwitch = $weglotUrl->getForLanguage($keyCode);
+        $widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', $urlSwitch, $listLanguages[$keyCode]);
 
         $widget .= '</li>';
     }

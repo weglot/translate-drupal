@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.5.1] - 2018-05-28
+### Fixed
+- Util.Url: Adding Port managment
+
 ## [0.5.0] - 2018-05-28
 ### Added
 - Util.Url: `getForLanguage($code)` function to get given language url base on current `Url` instance
