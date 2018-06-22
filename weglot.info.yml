@@ -1,0 +1,12 @@
+name: Weglot
+type: module
+description: Translate your website into multiple languages in minutes without doing any coding. Fully SEO compatible.
+package: Multilingual
+version: 1.0
+core: 8.x
+project: "weglot"
+php: 5.4
+dependencies:
+  - path
+  - locale
+  - composer_manager
