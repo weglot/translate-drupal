@@ -1,6 +1,7 @@
 {
-    "name": "weglot/weglot-drupal",
+    "name": "drupal/weglot",
     "description": "Translate your Drupal website easily",
+    "type": "drupal-module",
     "require": {
         "weglot/weglot-php": "^0.5.0"
     },

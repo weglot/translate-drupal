@@ -1,0 +1,7 @@
+weglot.settings:
+  path: '/admin/config/regional/weglot'
+  defaults:
+    _form: 'Drupal\weglot\Form\WeglotSettingsForm'
+    _title: 'Weglot Settings'
+  requirements:
+    _permission: 'weglot settings'

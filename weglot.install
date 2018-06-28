@@ -8,21 +8,21 @@
 /**
  * Implements hook_requirements().
  */
-function weglot_requirements($phase) {
-    $requirements = array();
-    if ($phase == 'runtime') {
-        if (!class_exists('\Weglot\Util\Url')) {
-            $requirements['weglot_library'] = array(
-              'title' => t('Weglot'),
-              'value' => t('Not available'),
-              'description' => t(
-                  'The Weglot module requires the PHP <a href="@library">Weglot library</a>. Install using <a href="@composer_manager">composer manager</a>',
-                  array('@library' => 'https://github.com/weglot/weglot-php
-', '@composer_manager' => 'https://www.drupal.org/project/composer_manager')
-              ),
-              'severity' => REQUIREMENT_ERROR,
-            );
-        }
-    }
-    return $requirements;
-}
+// function weglot_requirements($phase) {
+//     $requirements = array();
+//     if ($phase == 'runtime') {
+//         if (!class_exists('\Weglot\Util\Url')) {
+//             $requirements['weglot_library'] = array(
+//               'title' => t('Weglot'),
+//               'value' => t('Not available'),
+//               'description' => t(
+//                   'The Weglot module requires the PHP <a href="@library">Weglot library</a>. Install using <a href="@composer_manager">composer manager</a>',
+//                   array('@library' => 'https://github.com/weglot/weglot-php
+// ', '@composer_manager' => 'https://www.drupal.org/project/composer_manager')
+//               ),
+//               'severity' => REQUIREMENT_ERROR,
+//             );
+//         }
+//     }
+//     return $requirements;
+// }

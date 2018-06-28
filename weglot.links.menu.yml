@@ -1,0 +1,5 @@
+weglot.settings:
+  title: 'Weglot'
+  descrption: 'Configure Weglot translate.'
+  route_name: weglot.settings
+  parent: system.admin_config_regional
