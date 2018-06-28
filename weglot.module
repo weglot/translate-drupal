@@ -5,297 +5,297 @@
  */
 
 
-use Weglot\Client\Factory\Languages;
-use Weglot\Client\Api\TranslateEntry;
-use Weglot\Client\Api\WordEntry;
-use Weglot\Client\Client;
-use Weglot\Client\Endpoint\Translate;
-use Weglot\Client\Api\Enum\BotType;
-use Weglot\Client\Api\Enum\WordType;
-use Weglot\Util\Url;
-use Weglot\Util\Server;
-use Weglot\Parser\Parser;
-use Weglot\Parser\ConfigProvider\ManualConfigProvider;
-use Weglot\Parser\ConfigProvider\ServerConfigProvider;
+// use Weglot\Client\Factory\Languages;
+// use Weglot\Client\Api\TranslateEntry;
+// use Weglot\Client\Api\WordEntry;
+// use Weglot\Client\Client;
+// use Weglot\Client\Endpoint\Translate;
+// use Weglot\Client\Api\Enum\BotType;
+// use Weglot\Client\Api\Enum\WordType;
+// use Weglot\Util\Url;
+// use Weglot\Util\Server;
+// use Weglot\Parser\Parser;
+// use Weglot\Parser\ConfigProvider\ManualConfigProvider;
+// use Weglot\Parser\ConfigProvider\ServerConfigProvider;
 
-define('WEGLOT_VERSION', '1.5');
+// define('WEGLOT_VERSION', '1.5');
 
-if(!class_exists('Weglot\Util\Url')){
-  return;
-}
+// if(!class_exists('Weglot\Util\Url')){
+//   return;
+// }
 
-/**
- * Helper function
- *
- * @return array
- *   An array with original and destination language available
- */
-function get_code_original_destination_language() {
-    global $language;
-    $original_language = language_default();
+// /**
+//  * Helper function
+//  *
+//  * @return array
+//  *   An array with original and destination language available
+//  */
+// function get_code_original_destination_language() {
+//     global $language;
+//     $original_language = language_default();
 
-    $code_original_language    = $original_language->language;
-    $code_destination_language = $language->language;
+//     $code_original_language    = $original_language->language;
+//     $code_destination_language = $language->language;
 
-    return array(
-        'original' => $code_original_language,
-        'destination' => $code_destination_language
-    );
-}
+//     return array(
+//         'original' => $code_original_language,
+//         'destination' => $code_destination_language
+//     );
+// }
 
-/**
- * Get Weglot URL Object
- *
- * @return Weglot\Util\Url
- *   It is an object define if an URL is translable
- */
-function weglot_get_url_object() {
-    $code_languages = get_code_original_destination_language();
-    $destination_languages  = locale_language_list();
-
-
-    if (array_key_exists($code_languages['original'], $destination_languages)) {
-        unset($destination_languages[$code_languages['original']]);
-    }
-    $destination_languages = array_keys($destination_languages);
-
-    $weglot_url = new Url(
-      Server::fullUrl($_SERVER),
-      $code_languages['original'],
-      $destination_languages
-    );
-
-    $exclude_urls = variable_get("weglot_exclude_url", "");
-    if (empty($exclude_urls)) {
-        $exclude_urls = array();
-    }
-    else{
-      $exclude_urls = explode(',', $exclude_urls);
-    }
-
-    $weglot_url->setExcludedUrls($exclude_urls);
-
-    return $weglot_url;
-}
+// /**
+//  * Get Weglot URL Object
+//  *
+//  * @return Weglot\Util\Url
+//  *   It is an object define if an URL is translable
+//  */
+// function weglot_get_url_object() {
+//     $code_languages = get_code_original_destination_language();
+//     $destination_languages  = locale_language_list();
 
 
-ob_start('weglot_treat_page');
+//     if (array_key_exists($code_languages['original'], $destination_languages)) {
+//         unset($destination_languages[$code_languages['original']]);
+//     }
+//     $destination_languages = array_keys($destination_languages);
 
-/**
- * Parse and translate DOM
- *
- * @param string $dom
- *    Current DOM
- * @return string
- *    DOM Translated
- */
-function weglot_treat_page($dom) {
-    if (empty($dom) || arg(0) === "admin") { // Empty or only front
-        return prepare_render_treat_page($dom);
-    }
+//     $weglot_url = new Url(
+//       Server::fullUrl($_SERVER),
+//       $code_languages['original'],
+//       $destination_languages
+//     );
 
-    $api_key = variable_get("weglot_api_key", '');
+//     $exclude_urls = variable_get("weglot_exclude_url", "");
+//     if (empty($exclude_urls)) {
+//         $exclude_urls = array();
+//     }
+//     else{
+//       $exclude_urls = explode(',', $exclude_urls);
+//     }
 
-    if (!$api_key) {
-        return prepare_render_treat_page($dom);
-    }
+//     $weglot_url->setExcludedUrls($exclude_urls);
 
-    $code_languages = get_code_original_destination_language();
-
-    $weglot_url = weglot_get_url_object();
-
-    $params_treat_page = array();
-
-    if ($weglot_url->isTranslable()) {
-        $params_treat_page["widget"] =  widget_html();
-    }
-
-    if ($code_languages["destination"] === $code_languages["original"]) {
-        return prepare_render_treat_page($dom, $params_treat_page);
-    }
-
-    if (!$weglot_url->isTranslable()) {
-        drupal_goto($weglot_url->getForLanguage($code_languages["original"]));
-        return;
-    }
-
-    $client = new Client($api_key);
-    $config = new ServerConfigProvider();
-
-    $exclude_blocks  = array("#toolbar", "#overlay", ".page-admin", "#comment-body-add-more-wrapper");
-
-    $options_exclude_blocks = variable_get("weglot_exclude_blocks", '');
-    $options_exclude_blocks = explode(",", $options_exclude_blocks);
-    $exclude_blocks = array_merge($exclude_blocks, $options_exclude_blocks);
-
-    $parser = new Parser($client, $config, $exclude_blocks);
-
-    $content =  $parser->translate($dom, $code_languages["original"], $code_languages["destination"]);
-
-    return prepare_render_treat_page($content, $params_treat_page);
-}
-
-/**
- * Render treat page
- *
- * @param string $dom
- *   DOM you want render
- * @param array $params
- *   Params use for change the DOM. Like a widget selector
- * @return string
- *   The new DOM with the changes
- */
-function prepare_render_treat_page($dom, $params = array()) {
-    if (isset($params["widget"])) {
-        return str_replace('</body>', $params["widget"] . '</body>', $dom);
-    }
-
-    return $dom;
-}
-
-/**
- * Implements hook_preprocess_page().
- */
-function weglot_preprocess_page(&$vars, $hook) {
-    if (arg(0) !== "admin") { // Only front
-        drupal_add_js(drupal_get_path('module', 'weglot') . '/weglot-front.js');
-        drupal_add_css(drupal_get_path('module', 'weglot') . '/weglot-front.css');
-    }
-}
+//     return $weglot_url;
+// }
 
 
-/**
- * Implements hook_permission().
- */
-function weglot_permission() {
-    return array(
-        'access weglot' => array('title' => t('Access weglot'))
-    );
-}
+// ob_start('weglot_treat_page');
 
-/**
- * Implements hook_block_info().
- */
-function weglot_block_info() {
-    $block['weglot'] = array(
-        'info' => t('Block info de weglot')
-    );
+// /**
+//  * Parse and translate DOM
+//  *
+//  * @param string $dom
+//  *    Current DOM
+//  * @return string
+//  *    DOM Translated
+//  */
+// function weglot_treat_page($dom) {
+//     if (empty($dom) || arg(0) === "admin") { // Empty or only front
+//         return prepare_render_treat_page($dom);
+//     }
 
-    return $block;
-}
+//     $api_key = variable_get("weglot_api_key", '');
 
-/**
- * Implements hook_menu().
- */
-function weglot_menu() {
-    $items = array();
+//     if (!$api_key) {
+//         return prepare_render_treat_page($dom);
+//     }
 
-    $items['admin/settings/weglot'] = array(
-        'title' => 'Weglot',
-        'description' => 'Weglot module settings control',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('admin_weglot'),
-        'access arguments' => array('Modify Weglot settings'),
-        'type' => MENU_NORMAL_ITEM,
-    );
+//     $code_languages = get_code_original_destination_language();
 
-    return $items;
-}
+//     $weglot_url = weglot_get_url_object();
 
-/**
- * Implements hook_preprocess_html().
- */
-function weglot_preprocess_html(&$variables) {
-    // Add conditional stylesheets for admin pages on admin theme.
-    if (arg(0)=="admin") {
-        // reference your own stylesheet
-        drupal_add_css(drupal_get_path('module', 'weglot') . '/weglot.css');
-        drupal_add_js(drupal_get_path('module', 'weglot') . '/weglot.js');
-    }
-}
+//     $params_treat_page = array();
 
+//     if ($weglot_url->isTranslable()) {
+//         $params_treat_page["widget"] =  widget_html();
+//     }
 
-/**
- * Callback from weglot_menu
- */
-function admin_weglot() {
-    $form['general'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('General Configuration'),
-        '#collapsible' => FALSE,
-        '#collapsed' => FALSE,
-    );
+//     if ($code_languages["destination"] === $code_languages["original"]) {
+//         return prepare_render_treat_page($dom, $params_treat_page);
+//     }
 
-    $form['general']['weglot_api_key'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Api Key'),
-        '#default_value' => variable_get('weglot_api_key', ''),
-        '#description' => t("Log in to <a target='_blank' href='https://weglot.com/register-wordpress
-'>Weglot</a> to get your API key."),
-        '#required' => TRUE
-    );
+//     if (!$weglot_url->isTranslable()) {
+//         drupal_goto($weglot_url->getForLanguage($code_languages["original"]));
+//         return;
+//     }
 
-    $form['exclusion'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Translation exclusion (optional)'),
-        '#description' => t('By default, every page is translated. You can exclude parts of a page or a full page here.'),
-        '#collapsible' => TRUE,
-        '#collapsed' => FALSE,
-    );
+//     $client = new Client($api_key);
+//     $config = new ServerConfigProvider();
 
-    $form['exclusion']['weglot_exclude_url'] = array(
-        '#type' => 'textarea',
-        '#title' => 'Exclude URL here',
-        '#description' => t('You can write regex.'),
-        '#default_value' => variable_get('weglot_exclude_url', '')
-    );
+//     $exclude_blocks  = array("#toolbar", "#overlay", ".page-admin", "#comment-body-add-more-wrapper");
 
-    $form['exclusion']['weglot_exclude_blocks'] = array(
-        '#type' => 'textarea',
-        '#title' => 'Exclude blocks',
-        '#description' => t('Enter CSS selectors, separated by commas.'),
-        '#default_value' => variable_get('weglot_exclude_blocks', '')
-    );
+//     $options_exclude_blocks = variable_get("weglot_exclude_blocks", '');
+//     $options_exclude_blocks = explode(",", $options_exclude_blocks);
+//     $exclude_blocks = array_merge($exclude_blocks, $options_exclude_blocks);
+
+//     $parser = new Parser($client, $config, $exclude_blocks);
+
+//     $content =  $parser->translate($dom, $code_languages["original"], $code_languages["destination"]);
+
+//     return prepare_render_treat_page($content, $params_treat_page);
+// }
+
+// /**
+//  * Render treat page
+//  *
+//  * @param string $dom
+//  *   DOM you want render
+//  * @param array $params
+//  *   Params use for change the DOM. Like a widget selector
+//  * @return string
+//  *   The new DOM with the changes
+//  */
+// function prepare_render_treat_page($dom, $params = array()) {
+//     if (isset($params["widget"])) {
+//         return str_replace('</body>', $params["widget"] . '</body>', $dom);
+//     }
+
+//     return $dom;
+// }
+
+// /**
+//  * Implements hook_preprocess_page().
+//  */
+// function weglot_preprocess_page(&$vars, $hook) {
+//     if (arg(0) !== "admin") { // Only front
+//         drupal_add_js(drupal_get_path('module', 'weglot') . '/weglot-front.js');
+//         drupal_add_css(drupal_get_path('module', 'weglot') . '/weglot-front.css');
+//     }
+// }
 
 
-    return system_settings_form($form);
-}
+// /**
+//  * Implements hook_permission().
+//  */
+// function weglot_permission() {
+//     return array(
+//         'access weglot' => array('title' => t('Access weglot'))
+//     );
+// }
 
-/**
- * Get widget selector
- *
- * @return string
- *   Return widget selector
- */
-function widget_html() {
-    $code_languages = get_code_original_destination_language();
-    $is_dropdown    = TRUE;
-    $flag_class     = 'wg-flags ';
-    $tag           = $is_dropdown ? 'div' : 'li';
-    $list_tag       = $is_dropdown ? '<ul>' : '';
+// /**
+//  * Implements hook_block_info().
+//  */
+// function weglot_block_info() {
+//     $block['weglot'] = array(
+//         'info' => t('Block info de weglot')
+//     );
 
-    $widget = sprintf('<!--Weglot %s-->', WEGLOT_VERSION);
-    $widget .= "<aside data-wg-notranslate='' id='weglot-selector' class='wg-default wg-drop country-selector closed'>";
+//     return $block;
+// }
 
-    $weglot_url = weglot_get_url_object();
-    $list_languages = locale_language_list();
-    $widget .= sprintf('<%s data-wg-notranslate="" class="wgcurrent wg-li wg-flags %s"><a href="#" onclick="return false;">%s</a></%s>', $tag, $code_languages["destination"], $list_languages[$code_languages["destination"]], $tag);
+// /**
+//  * Implements hook_menu().
+//  */
+// function weglot_menu() {
+//     $items = array();
 
-    $widget .= $list_tag;
-    foreach ($list_languages as $key_code => $lang) {
-        if ($key_code === $code_languages['destination']) {
-            continue;
-        }
+//     $items['admin/settings/weglot'] = array(
+//         'title' => 'Weglot',
+//         'description' => 'Weglot module settings control',
+//         'page callback' => 'drupal_get_form',
+//         'page arguments' => array('admin_weglot'),
+//         'access arguments' => array('Modify Weglot settings'),
+//         'type' => MENU_NORMAL_ITEM,
+//     );
 
-        $widget .= sprintf('<li class="wg-li %s">', $flag_class . $key_code);
-        $url_switch = $weglot_url->getForLanguage($key_code);
-        $widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', $url_switch, $list_languages[$key_code]);
+//     return $items;
+// }
 
-        $widget .= '</li>';
-    }
-    $widget .= $list_tag;
+// /**
+//  * Implements hook_preprocess_html().
+//  */
+// function weglot_preprocess_html(&$variables) {
+//     // Add conditional stylesheets for admin pages on admin theme.
+//     if (arg(0)=="admin") {
+//         // reference your own stylesheet
+//         drupal_add_css(drupal_get_path('module', 'weglot') . '/weglot.css');
+//         drupal_add_js(drupal_get_path('module', 'weglot') . '/weglot.js');
+//     }
+// }
 
-    $widget .= "</aside>";
 
-    return $widget;
-}
+// /**
+//  * Callback from weglot_menu
+//  */
+// function admin_weglot() {
+//     $form['general'] = array(
+//         '#type' => 'fieldset',
+//         '#title' => t('General Configuration'),
+//         '#collapsible' => FALSE,
+//         '#collapsed' => FALSE,
+//     );
+
+//     $form['general']['weglot_api_key'] = array(
+//         '#type' => 'textfield',
+//         '#title' => t('Api Key'),
+//         '#default_value' => variable_get('weglot_api_key', ''),
+//         '#description' => t("Log in to <a target='_blank' href='https://weglot.com/register-wordpress
+// '>Weglot</a> to get your API key."),
+//         '#required' => TRUE
+//     );
+
+//     $form['exclusion'] = array(
+//         '#type' => 'fieldset',
+//         '#title' => t('Translation exclusion (optional)'),
+//         '#description' => t('By default, every page is translated. You can exclude parts of a page or a full page here.'),
+//         '#collapsible' => TRUE,
+//         '#collapsed' => FALSE,
+//     );
+
+//     $form['exclusion']['weglot_exclude_url'] = array(
+//         '#type' => 'textarea',
+//         '#title' => 'Exclude URL here',
+//         '#description' => t('You can write regex.'),
+//         '#default_value' => variable_get('weglot_exclude_url', '')
+//     );
+
+//     $form['exclusion']['weglot_exclude_blocks'] = array(
+//         '#type' => 'textarea',
+//         '#title' => 'Exclude blocks',
+//         '#description' => t('Enter CSS selectors, separated by commas.'),
+//         '#default_value' => variable_get('weglot_exclude_blocks', '')
+//     );
+
+
+//     return system_settings_form($form);
+// }
+
+// /**
+//  * Get widget selector
+//  *
+//  * @return string
+//  *   Return widget selector
+//  */
+// function widget_html() {
+//     $code_languages = get_code_original_destination_language();
+//     $is_dropdown    = TRUE;
+//     $flag_class     = 'wg-flags ';
+//     $tag           = $is_dropdown ? 'div' : 'li';
+//     $list_tag       = $is_dropdown ? '<ul>' : '';
+
+//     $widget = sprintf('<!--Weglot %s-->', WEGLOT_VERSION);
+//     $widget .= "<aside data-wg-notranslate='' id='weglot-selector' class='wg-default wg-drop country-selector closed'>";
+
+//     $weglot_url = weglot_get_url_object();
+//     $list_languages = locale_language_list();
+//     $widget .= sprintf('<%s data-wg-notranslate="" class="wgcurrent wg-li wg-flags %s"><a href="#" onclick="return false;">%s</a></%s>', $tag, $code_languages["destination"], $list_languages[$code_languages["destination"]], $tag);
+
+//     $widget .= $list_tag;
+//     foreach ($list_languages as $key_code => $lang) {
+//         if ($key_code === $code_languages['destination']) {
+//             continue;
+//         }
+
+//         $widget .= sprintf('<li class="wg-li %s">', $flag_class . $key_code);
+//         $url_switch = $weglot_url->getForLanguage($key_code);
+//         $widget .= sprintf('<a data-wg-notranslate href="%s">%s</a>', $url_switch, $list_languages[$key_code]);
+
+//         $widget .= '</li>';
+//     }
+//     $widget .= $list_tag;
+
+//     $widget .= "</aside>";
+
+//     return $widget;
+// }
